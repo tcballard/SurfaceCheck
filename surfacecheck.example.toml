@@ -1,0 +1,45 @@
+[project]
+name = "surfacecheck"
+version_source = "Cargo.toml"
+repository = "https://github.com/tcballard/surfacecheck"
+homepage = "https://example.com"
+install = "cargo install surfacecheck"
+release_url = "https://github.com/tcballard/surfacecheck/releases/tag/v{version}"
+
+[[surface]]
+name = "README"
+kind = "markdown"
+path = "README.md"
+require = ["{version}", "{install}"]
+
+[[surface]]
+name = "Website"
+kind = "url"
+url = "https://example.com"
+require = ["{version}"]
+canonical = "{homepage}"
+
+[[surface]]
+name = "Release feed"
+kind = "rss"
+url = "https://example.com/rss.xml"
+require = ["{version}", "{release_url}"]
+
+[[surface]]
+name = "Sitemap"
+kind = "sitemap"
+url = "https://example.com/sitemap.xml"
+require = ["{homepage}"]
+
+[[surface]]
+name = "llms.txt"
+kind = "llms"
+url = "https://example.com/llms.txt"
+require = ["{name}", "{version}"]
+
+[github]
+repository = "tcballard/surfacecheck"
+homepage = "https://example.com"
+description = "Deterministic post-release consistency checks for public software surfaces"
+check_latest_release = true
+

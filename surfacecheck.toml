@@ -1,0 +1,11 @@
+[project]
+name = "surfacecheck"
+version_source = "Cargo.toml"
+repository = "https://github.com/tcballard/surfacecheck"
+install = "cargo install surfacecheck"
+
+[[surface]]
+name = "README"
+kind = "markdown"
+path = "README.md"
+require = ["{version}", "{install}"]

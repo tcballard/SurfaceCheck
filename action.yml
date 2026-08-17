@@ -1,0 +1,22 @@
+name: Surfacecheck
+description: Check whether public project surfaces agree with the shipped release
+inputs:
+  config:
+    description: Path to surfacecheck.toml
+    required: false
+    default: surfacecheck.toml
+  github-token:
+    description: Token used for GitHub metadata and release checks
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: composite
+  steps:
+    - name: Install Surfacecheck
+      shell: bash
+      run: cargo install --path "${{ github.action_path }}"
+    - name: Check public release truth
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: surfacecheck check --config "${{ inputs.config }}"
