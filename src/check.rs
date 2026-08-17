@@ -405,9 +405,15 @@ fn read_version(path: &Path) -> Result<String> {
             value
                 .get("package")
                 .and_then(|package| package.get("version"))
+                .or_else(|| {
+                    value
+                        .get("workspace")
+                        .and_then(|workspace| workspace.get("package"))
+                        .and_then(|package| package.get("version"))
+                })
                 .and_then(toml::Value::as_str)
                 .map(str::to_owned)
-                .context("Cargo.toml has no package.version")
+                .context("Cargo.toml has no package.version or workspace.package.version")
         }
         "package.json" => {
             let value: serde_json::Value =

@@ -84,6 +84,46 @@ require = ["{version}"]
 }
 
 #[test]
+fn reads_a_cargo_workspace_version() {
+    let temp = TempDir::new().expect("temp directory");
+    fs::write(
+        temp.path().join("Cargo.toml"),
+        "[workspace]\nmembers = []\n\n[workspace.package]\nversion = \"3.1.4\"\n",
+    )
+    .expect("workspace manifest");
+    fs::write(temp.path().join("CHANGELOG.md"), "## v3.1.4\n").expect("changelog");
+    fs::write(
+        temp.path().join("surfacecheck.toml"),
+        r#"
+[project]
+name = "workspace-demo"
+version_source = "Cargo.toml"
+
+[[surface]]
+name = "Changelog"
+kind = "markdown"
+path = "CHANGELOG.md"
+require = ["v{version}"]
+"#,
+    )
+    .expect("config");
+
+    let output = binary()
+        .current_dir(temp.path())
+        .args(["check", "--offline"])
+        .output()
+        .expect("run surfacecheck");
+
+    assert!(
+        output.status.success(),
+        "stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("workspace-demo 3.1.4"));
+}
+
+#[test]
 fn init_creates_a_working_configuration() {
     let temp = TempDir::new().expect("temp directory");
     fs::write(
