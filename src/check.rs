@@ -49,7 +49,9 @@ fn check_surface(
     offline: bool,
     findings: &mut Vec<Finding>,
 ) {
-    if offline && surface.url.is_some() {
+    let expanded_url = surface.url.as_ref().map(|url| expand(url, variables));
+
+    if offline && expanded_url.is_some() {
         findings.push(Finding::pass(
             "surface.skipped",
             &surface.name,
@@ -67,7 +69,7 @@ fn check_surface(
                 final_url: None,
             })
             .with_context(|| format!("cannot read {}", full_path.display()))
-    } else if let Some(url) = &surface.url {
+    } else if let Some(url) = &expanded_url {
         load_url(client, url)
     } else {
         unreachable!("configuration validation requires a source")
@@ -106,7 +108,7 @@ fn check_surface(
                 "content.missing",
                 &surface.name,
                 format!("missing required fact: {expanded}"),
-                Some(surface_location(surface)),
+                Some(surface_location(surface, expanded_url.as_deref())),
             ));
         }
     }
@@ -129,12 +131,12 @@ fn check_surface(
                 "html.canonical_missing",
                 &surface.name,
                 "canonical URL is missing",
-                Some(surface_location(surface)),
+                Some(surface_location(surface, expanded_url.as_deref())),
             )),
         }
     }
 
-    if let (Some(requested), Some(final_url)) = (&surface.url, &loaded.final_url) {
+    if let (Some(requested), Some(final_url)) = (&expanded_url, &loaded.final_url) {
         if !urls_equal(requested, final_url) {
             findings.push(Finding::fail(
                 "http.redirect",
@@ -467,12 +469,12 @@ fn canonical_url(html: &str) -> Option<String> {
     canonical
 }
 
-fn surface_location(surface: &SurfaceConfig) -> String {
+fn surface_location(surface: &SurfaceConfig, expanded_url: Option<&str>) -> String {
     surface
         .path
         .as_ref()
         .map(|path| path.display().to_string())
-        .or_else(|| surface.url.clone())
+        .or_else(|| expanded_url.map(str::to_owned))
         .unwrap_or_else(|| surface.name.clone())
 }
 
