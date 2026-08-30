@@ -99,8 +99,8 @@ check_latest_release = true
 ```
 
 The supported variables are `{name}`, `{version}`, `{repository}`, `{homepage}`,
-`{install}`, and `{release_url}`. Surfacecheck expands them in `require` and
-`canonical` values.
+`{install}`, and `{release_url}`. Surfacecheck expands them in `url`, `require`,
+and `canonical` values.
 
 ## Checks in 0.1
 

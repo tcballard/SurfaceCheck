@@ -163,7 +163,8 @@ fn checks_live_llms_content_and_delivery_headers() {
     let server = thread::spawn(move || {
         let (mut stream, _) = listener.accept().expect("accept request");
         let mut request = [0_u8; 2048];
-        let _ = stream.read(&mut request).expect("read request");
+        let request_length = stream.read(&mut request).expect("read request");
+        let request = String::from_utf8_lossy(&request[..request_length]).into_owned();
         let body = "# demo\nVersion: 2.0.0\n";
         write!(
             stream,
@@ -172,6 +173,7 @@ fn checks_live_llms_content_and_delivery_headers() {
             body
         )
         .expect("write response");
+        request
     });
 
     let temp = TempDir::new().expect("temp directory");
@@ -191,7 +193,7 @@ version_source = "Cargo.toml"
 [[surface]]
 name = "llms.txt"
 kind = "llms"
-url = "http://{address}/llms.txt"
+url = "http://{address}/v{{version}}/llms.txt"
 require = ["{{version}}"]
 "#
         ),
@@ -203,7 +205,7 @@ require = ["{{version}}"]
         .args(["check", "--json"])
         .output()
         .expect("run surfacecheck");
-    server.join().expect("test server");
+    let request = server.join().expect("test server");
 
     assert!(
         output.status.success(),
@@ -213,4 +215,5 @@ require = ["{{version}}"]
     );
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("JSON report");
     assert_eq!(report["failed"], 0);
+    assert!(request.starts_with("GET /v2.0.0/llms.txt "));
 }
